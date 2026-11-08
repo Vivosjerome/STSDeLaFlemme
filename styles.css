@@ -36,6 +36,26 @@ body {
 
 .card { width: min(100%, 420px); }
 
+.brand {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 14px;
+}
+
+.brand img {
+  display: block;
+  height: 72px;
+  width: auto;
+}
+
+.brand .mark-dark { display: none; }
+
+html[data-look="1"] .brand .mark-light,
+html[data-look="13"] .brand .mark-light { display: none; }
+
+html[data-look="1"] .brand .mark-dark,
+html[data-look="13"] .brand .mark-dark { display: block; }
+
 h1 {
   margin: 0 0 28px;
   font-size: 28px;
@@ -474,7 +494,7 @@ html[data-look="17"] {
 html[data-look="17"] .who,
 html[data-look="17"] .popup-card p { font-family: Georgia, "Times New Roman", serif; font-weight: 600; }
 html[data-look="19"] .who {
-  margin: -8px -8px 22px;
+  margin: 0 0 22px;
   padding: 18px 12px;
   background: #111827;
   color: #f9fafb;
