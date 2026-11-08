@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0c0d10" />
+    <title>STS de la flemme</title>
+    <script>
+      try {
+        const prefs = JSON.parse(localStorage.getItem("sts-flemme-prefs") || "{}");
+        if (prefs.email && prefs.password) document.documentElement.classList.add("booting");
+        const kept = ["1", "2", "13", "17", "19"];
+        let theme = localStorage.getItem("sts-flemme-theme");
+        if (!kept.includes(theme)) {
+          const old = Number(localStorage.getItem("sts-flemme-look"));
+          const fromOld = String((Number.isFinite(old) ? old : 0) + 1);
+          theme = kept.includes(fromOld) ? fromOld : "1";
+        }
+        document.documentElement.dataset.look = theme;
+      } catch {}
+    </script>
+    <link rel="stylesheet" href="styles.css?v=20" />
+  </head>
+  <body>
+    <div class="theme-dock">
+      <button type="button" id="theme-btn" aria-expanded="false" aria-controls="theme-panel">Thème</button>
+      <div id="theme-panel" class="theme-panel" hidden>
+        <button type="button" class="theme-choice" data-theme="1">
+          <span class="swatch swatch-1" aria-hidden="true"><span></span><span></span><i></i></span>
+          Nuit
+        </button>
+        <button type="button" class="theme-choice" data-theme="2">
+          <span class="swatch swatch-2" aria-hidden="true"><span></span><span></span><i></i></span>
+          Clair
+        </button>
+        <button type="button" class="theme-choice" data-theme="13">
+          <span class="swatch swatch-13" aria-hidden="true"><span></span><span></span><i></i></span>
+          Carré
+        </button>
+        <button type="button" class="theme-choice" data-theme="17">
+          <span class="swatch swatch-17" aria-hidden="true"><span></span><span></span><i></i></span>
+          Papier
+        </button>
+        <button type="button" class="theme-choice" data-theme="19">
+          <span class="swatch swatch-19" aria-hidden="true"><span></span><span></span><i></i></span>
+          Bandeau
+        </button>
+      </div>
+    </div>
+    <main class="card">
+      <section id="loading-view" hidden>
+        <div class="spinner" aria-hidden="true"></div>
+        <p>Connexion…</p>
+      </section>
+
+      <section id="login-view">
+        <h1>STS de la flemme</h1>
+        <form id="login-form">
+          <label>
+            Email
+            <input id="email" name="email" type="email" autocomplete="username" required />
+          </label>
+          <label>
+            Mot de passe
+            <input id="password" name="password" type="password" autocomplete="current-password" required />
+          </label>
+          <p id="login-error" class="error" hidden></p>
+          <button type="submit" id="login-btn">Se connecter</button>
+        </form>
+      </section>
+
+      <section id="app-view" hidden>
+        <p id="who-name" class="who"></p>
+        <form id="send-form">
+          <div class="times">
+            <label>
+              Départ
+              <span class="time-field">
+                <span class="time-face" aria-hidden="true"></span>
+                <input id="start" name="start" type="time" step="60" required />
+              </span>
+            </label>
+            <label>
+              Arrivée
+              <span class="time-field">
+                <span class="time-face" aria-hidden="true"></span>
+                <input id="end" name="end" type="time" step="60" required />
+              </span>
+            </label>
+          </div>
+          <p id="send-error" class="error" hidden></p>
+          <p id="send-ok" class="ok" hidden></p>
+          <button type="submit" id="send-btn">Envoyer</button>
+        </form>
+        <button type="button" id="police-btn" class="secondary">
+          <img class="police-art" src="police-courier.jpg" alt="" />
+          <span class="police-foot"><span id="police-label">Police</span></span>
+        </button>
+        <button type="button" id="logout" class="link">Déconnexion</button>
+      </section>
+    </main>
+    <div id="popup" class="popup" hidden>
+      <div class="popup-card">
+        <p id="popup-text"></p>
+        <div class="confirm">
+          <button type="button" id="popup-yes">Oui</button>
+          <button type="button" id="popup-no" class="secondary">Non</button>
+        </div>
+      </div>
+    </div>
+    <script src="app.js?v=30"></script>
+  </body>
+</html>
