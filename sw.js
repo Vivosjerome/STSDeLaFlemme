@@ -1,9 +1,9 @@
-const CACHE = "sts-flemme-v1";
+const CACHE = "sts-flemme-v4";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=24",
-  "./app.js?v=31",
+  "./styles.css?v=27",
+  "./app.js?v=34",
   "./logo.png",
   "./logo-ondark.png",
   "./favicon.png?v=1",

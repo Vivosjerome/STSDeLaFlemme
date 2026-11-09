@@ -1,4 +1,5 @@
 const API_URL = "https://sts-mobilite.stsweb.fr/graphql";
+const JOURNAL_URL = "https://sts-flemme-suivi.vivosjerome.workers.dev";
 const SESSION_KEY = "sts-flemme-session";
 const PREFS_KEY = "sts-flemme-prefs";
 const MISSION_NAME = "Livraison";
@@ -285,6 +286,8 @@ function showApp() {
   show(sendError, "");
   show(sendOk, "");
   setArrivalNow();
+  loadTeam();
+  startPresence();
 }
 
 function showLogin({ forget = false } = {}) {
@@ -299,6 +302,9 @@ function showLogin({ forget = false } = {}) {
   $("password").value = forget ? "" : prefs.password || "";
   appView.hidden = true;
   loginView.hidden = false;
+  $("team-btn").hidden = true;
+  $("team-list").hidden = true;
+  stopPresence();
   show(loginError, "");
 }
 
@@ -334,6 +340,78 @@ async function login(email, password) {
   };
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
   savePrefs({ email, password });
+  noteJournal({ name: session.name, at: new Date().toISOString() });
+}
+
+function formatClock(value) {
+  const match = String(value || "").match(/^(\d{2}):(\d{2})$/);
+  if (!match) return "";
+  return `${Number(match[1])}h${match[2]}`;
+}
+
+function ago(value) {
+  const then = new Date(value).getTime();
+  if (Number.isNaN(then)) return "";
+  const minutes = Math.max(0, Math.round((Date.now() - then) / 60000));
+  if (minutes < 2) return "en ligne";
+  if (minutes < 60) return `il y a ${minutes} min`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `il y a ${hours} h`;
+  const days = Math.round(hours / 24);
+  return days === 1 ? "hier" : `il y a ${days} jours`;
+}
+
+let presenceTimer = 0;
+
+function startPresence() {
+  stopPresence();
+  presenceTimer = setInterval(() => {
+    if (document.visibilityState === "visible" && session?.name) {
+      noteJournal({ name: session.name, at: new Date().toISOString() });
+    }
+  }, 60000);
+}
+
+function stopPresence() {
+  clearInterval(presenceTimer);
+}
+
+async function loadTeam(open = false) {
+  const button = $("team-btn");
+  const list = $("team-list");
+  const wasOpen = open || !list.hidden;
+  button.hidden = true;
+  list.replaceChildren();
+  if (!session?.token) return;
+  try {
+    const response = await fetch(`${JOURNAL_URL}/events`, {
+      headers: { Authorization: `Bearer ${session.token}` },
+    });
+    if (!response.ok) return;
+    const people = await response.json();
+    button.hidden = false;
+    list.hidden = !wasOpen;
+    if (!people.length) {
+      const empty = document.createElement("p");
+      empty.textContent = "Personne pour l'instant.";
+      list.appendChild(empty);
+      return;
+    }
+    for (const person of people) {
+      const line = document.createElement("p");
+      const hours = person.start && person.end ? `${formatClock(person.start)} – ${formatClock(person.end)}` : "";
+      line.textContent = [person.name || "—", ago(person.last), hours].filter(Boolean).join(" · ");
+      list.appendChild(line);
+    }
+  } catch {}
+}
+
+function noteJournal(body) {
+  fetch(`${JOURNAL_URL}/event`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  }).catch(() => {});
 }
 
 async function sendDay(plan, { finish = true } = {}) {
@@ -500,6 +578,16 @@ $("popup-yes").addEventListener("click", async () => {
       if (!day) return;
       await sendDay(day);
       savePrefs({ start: $("start").value });
+      const sentStart = day.blocks[0]?.start;
+      const sentEnd = day.blocks.at(-1)?.end;
+      if (sentStart && sentEnd) {
+        noteJournal({
+          name: session.name,
+          at: new Date().toISOString(),
+          start: timeValue(sentStart),
+          end: timeValue(sentEnd),
+        });
+      }
       closePopup();
       showLines(sendOk, ["Envoyé et validé.", ...daySummary(day)]);
     } else if (mode === "send") {
@@ -526,6 +614,14 @@ $("popup-yes").addEventListener("click", async () => {
 renderPoliceButton();
 
 $("logout").addEventListener("click", () => showLogin({ forget: true }));
+$("team-btn").addEventListener("click", () => {
+  const list = $("team-list");
+  if (!list.hidden) {
+    list.hidden = true;
+    return;
+  }
+  loadTeam(true);
+});
 
 const THEMES = ["1", "2", "13", "17", "19"];
 const THEME_KEY = "sts-flemme-theme";

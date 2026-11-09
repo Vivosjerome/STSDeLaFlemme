@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Suivi</title>
+    <link rel="stylesheet" href="styles.css?v=25" />
+  </head>
+  <body>
+    <main class="card suivi">
+      <h1>Suivi</h1>
+      <form id="gate">
+        <label>
+          Code
+          <input id="code" type="password" autocomplete="current-password" required />
+        </label>
+        <p id="gate-error" class="error" hidden></p>
+        <button type="submit">Voir</button>
+      </form>
+      <div id="list" hidden>
+        <p id="empty" hidden>Personne pour l'instant.</p>
+        <div class="suivi-table" id="rows"></div>
+      </div>
+    </main>
+    <script>
+      const JOURNAL_URL = "https://sts-flemme-suivi.vivosjerome.workers.dev";
+      const KEY = "sts-flemme-suivi-key";
+      const gate = document.getElementById("gate");
+      const list = document.getElementById("list");
+      const rows = document.getElementById("rows");
+      const empty = document.getElementById("empty");
+      const error = document.getElementById("gate-error");
+
+      function when(value) {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "—";
+        return date.toLocaleString("fr-FR", {
+          day: "numeric",
+          month: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "Europe/Paris",
+        });
+      }
+
+      function showError(text) {
+        error.hidden = !text;
+        error.textContent = text || "";
+      }
+
+      async function load(code) {
+        const response = await fetch(`${JOURNAL_URL}/events`, {
+          headers: { "X-Suivi-Key": code },
+        });
+        if (response.status === 401) throw new Error("Code incorrect.");
+        if (!response.ok) throw new Error("Liste indisponible.");
+        const people = await response.json();
+        localStorage.setItem(KEY, code);
+        gate.hidden = true;
+        list.hidden = false;
+        rows.innerHTML = "";
+        empty.hidden = people.length > 0;
+        for (const person of people) {
+          const row = document.createElement("article");
+          row.innerHTML = `<strong></strong><span></span><span></span>`;
+          row.querySelector("strong").textContent = person.name || "—";
+          row.children[1].textContent = when(person.last);
+          row.children[2].textContent = person.start && person.end ? `${person.start} – ${person.end}` : "Pas encore envoyé";
+          rows.appendChild(row);
+        }
+      }
+
+      gate.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        showError("");
+        try {
+          await load(document.getElementById("code").value);
+        } catch (err) {
+          showError(err.message || "Liste indisponible.");
+        }
+      });
+
+      const saved = localStorage.getItem(KEY);
+      if (saved) load(saved).catch(() => localStorage.removeItem(KEY));
+    </script>
+  </body>
+</html>

@@ -1,0 +1,7 @@
+name = "sts-flemme-suivi"
+main = "journal-worker.js"
+compatibility_date = "2026-11-09"
+
+[[kv_namespaces]]
+binding = "JOURNAL"
+id = "7f02e597bd3d420ea5f111bb67dd72ed"
