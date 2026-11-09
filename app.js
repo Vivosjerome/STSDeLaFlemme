@@ -538,10 +538,14 @@ function savedTheme() {
   return THEMES.includes(fromOld) ? fromOld : "1";
 }
 
+const THEME_COLORS = { 1: "#0c0d10", 2: "#f4f1ea", 13: "#111111", 17: "#f7f3ee", 19: "#e5e7eb" };
+
 function applyTheme(id) {
   const theme = THEMES.includes(id) ? id : "1";
   document.documentElement.dataset.look = theme;
   localStorage.setItem(THEME_KEY, theme);
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeMeta) themeMeta.content = THEME_COLORS[theme];
   document.querySelectorAll(".theme-choice").forEach((button) => {
     const on = button.dataset.theme === theme;
     button.classList.toggle("is-on", on);
